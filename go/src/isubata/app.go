@@ -638,6 +638,7 @@ func postAddChannel(c echo.Context) error {
 }
 
 func postImage(filename string, file io.ReadSeeker) error {
+	log.Printf("Called postImage %s\n", filename)
 	awsConfig := aws.Config{
 		Credentials: credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
 		Region:      aws.String("sakura"),
@@ -650,7 +651,7 @@ func postImage(filename string, file io.ReadSeeker) error {
 		Body:   file,
 	}
 	resp, err := client.PutObject(params)
-	log.Println(resp)
+	log.Printf("%x\n", err)
 	return err
 }
 
@@ -705,7 +706,11 @@ func postProfile(c echo.Context) error {
 			return err
 		}
 
-		postImage(avatarName, file)
+		err = postImage(avatarName, file)
+		if err != nil {
+			return err
+		}
+
 	}
 
 	if name := c.FormValue("display_name"); name != "" {
