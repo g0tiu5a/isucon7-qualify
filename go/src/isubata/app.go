@@ -15,6 +15,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -765,6 +766,7 @@ func tRange(a, b int64) []int64 {
 }
 
 func main() {
+	runtime.GOMAXPROCS(8)
 	e := echo.New()
 	funcs := template.FuncMap{
 		"add":    tAdd,
