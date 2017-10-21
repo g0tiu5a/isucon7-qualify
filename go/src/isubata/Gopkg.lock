@@ -2,10 +2,22 @@
 
 
 [[projects]]
+  name = "github.com/aws/aws-sdk-go"
+  packages = ["aws","aws/awserr","aws/awsutil","aws/client","aws/client/metadata","aws/credentials","aws/endpoints","aws/request","aws/signer/v4","internal/shareddefaults","private/protocol","private/protocol/query","private/protocol/query/queryutil","private/protocol/rest","private/protocol/restxml","private/protocol/xml/xmlutil","service/s3"]
+  revision = "0b712b483e38c7e1efe9c3e0249de0a8f131cb4e"
+  version = "v1.12.15"
+
+[[projects]]
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
   revision = "d2709f9f1f31ebcda9651b03077758c1f3a0018c"
   version = "v3.0.0"
+
+[[projects]]
+  name = "github.com/go-ini/ini"
+  packages = ["."]
+  revision = "5b3e00af70a9484542169a976dcab8d03e601a17"
+  version = "v1.30.0"
 
 [[projects]]
   name = "github.com/go-sql-driver/mysql"
@@ -32,6 +44,11 @@
   version = "v1.1"
 
 [[projects]]
+  name = "github.com/jmespath/go-jmespath"
+  packages = ["."]
+  revision = "0b12d6b5"
+
+[[projects]]
   branch = "master"
   name = "github.com/jmoiron/sqlx"
   packages = [".","reflectx"]
@@ -42,12 +59,6 @@
   packages = [".","middleware"]
   revision = "cec7629194fe4bf83b0c72d9a02d340c7a1468ac"
   version = "3.2.3"
-
-[[projects]]
-  name = "github.com/labstack/echo-contrib"
-  packages = ["session"]
-  revision = "4036746d4b33517e42af3502522b759b0c99f44c"
-  version = "0.4.0"
 
 [[projects]]
   name = "github.com/labstack/gommon"
@@ -94,6 +105,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9d36470f0563bf7a47836bd9683357e361e744892223667a231bf07b98f8882f"
+  inputs-digest = "5e3e6f46b687092b4972f01b4c60938d8dc6fd5ebe1ecbf5a11451dc1a6c86ff"
   solver-name = "gps-cdcl"
   solver-version = 1
