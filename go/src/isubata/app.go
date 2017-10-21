@@ -221,6 +221,7 @@ func register(name, password string) (int64, error) {
 // request handlers
 
 func initializeBucket() {
+	log.Println("initializeBucket()")
 	// DBから id <= 1000 のファイル名をひっぱてきて (a)
 	type OldImage struct {
 		Id   int    `db:"id"`
