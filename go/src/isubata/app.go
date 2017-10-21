@@ -422,7 +422,7 @@ func queryHaveReadAllChannels(userID int64) (map[int64]int64, error) {
 		MessageID int64 `db:"message_id"`
 	}
 	havereads := []HaveRearParU{}
-	err := db.Select(&havereads, "SELECT message_id FROM haveread WHERE user_id = ?")
+	err := db.Select(&havereads, "SELECT channel_id, message_id FROM haveread WHERE user_id = ?")
 
 	var resp map[int64]int64
 
