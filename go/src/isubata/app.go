@@ -244,6 +244,7 @@ func initializeRedis() {
 	}
 
 	for _, msg := range messages {
+		log.Println("msg:" + msg.ChannelID)
 		redisConn.Do("INCR", msg.ChannelID)
 	}
 }
@@ -551,7 +552,7 @@ func fetchUnread(c echo.Context) error {
 				"SELECT COUNT(*) as cnt FROM message WHERE channel_id = ? AND ? < id",
 				chID, lastID)
 		} else {
-			cnt, err = redis.Int64(redisConn.Do("GET", chID)) // keyがないときはcntは0になる
+			cnt, err = redis.Int(redisConn.Do("GET", chID)) // keyがないときはcntは0になる
 			if err != redis.ErrNil {
 				return err
 			}
