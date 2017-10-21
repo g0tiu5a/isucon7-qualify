@@ -48,6 +48,8 @@ var (
 		S3ForcePathStyle: aws.Bool(true),
 		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
 	}
+	s3Session = awsSession.New(&awsConfig)
+	s3client  = s3.New(s3Session)
 )
 
 type Renderer struct {
@@ -218,12 +220,51 @@ func register(name, password string) (int64, error) {
 
 // request handlers
 
+func initializeBucket() {
+	// DBから id <= 1000 のファイル名をひっぱてきて (a)
+	type OldImage struct {
+		Id   int    `db:"id"`
+		Name string `db:"name"`
+	}
+
+	oldImages := []OldImage{}
+	err := db.Select(&oldImages, "SELECT id, name FROM image")
+
+	if err != nil {
+		log.Fatalf("Cannot read image from database")
+	}
+
+	dictImages := make(map[string]int)
+	for _, old := range oldImages {
+		dictImages[old.Name] = old.Id
+		log.Printf("name = %s", old.Name)
+	}
+
+	// 現状のバケットにあるファイル一覧をひっぱてくる (b)
+	_ = s3client.ListObjectsPages(&s3.ListObjectsInput{
+		Bucket: aws.String("image"),
+	}, func(p *s3.ListObjectsOutput, last bool) (shouldContinue bool) {
+		for _, obj := range p.Contents {
+			_, ok := dictImages[*obj.Key]
+			if ok == false {
+				log.Printf("Deleting... %s\n", *obj.Key)
+				_, err := s3client.DeleteObject(&s3.DeleteObjectInput{Bucket: aws.String("image"), Key: aws.String(*obj.Key)})
+				if err != nil {
+					log.Fatalf("Error cannot delete object from s3: %s\n", *obj.Key)
+				}
+			}
+		}
+		return true
+	})
+}
+
 func getInitialize(c echo.Context) error {
 	db.MustExec("DELETE FROM user WHERE id > 1000")
-	db.MustExec("DELETE FROM image WHERE id > 1001")
 	db.MustExec("DELETE FROM channel WHERE id > 10")
 	db.MustExec("DELETE FROM message WHERE id > 10000")
 	db.MustExec("DELETE FROM haveread")
+	// db.MustExec("DELETE FROM image WHERE id > 1001")
+	initializeBucket()
 	return c.String(204, "")
 }
 
@@ -639,14 +680,12 @@ func postAddChannel(c echo.Context) error {
 
 func postImage(filename string, file io.ReadSeeker) error {
 	log.Printf("Called postImage %s\n", filename)
-	s3Session := awsSession.New(&awsConfig)
-	client := s3.New(s3Session)
 	params := &s3.PutObjectInput{
 		Bucket: aws.String("image"),
 		Key:    aws.String(filename),
 		Body:   file,
 	}
-	resp, err := client.PutObject(params)
+	resp, err := s3client.PutObject(params)
 	log.Printf("%s%x\n", resp, err)
 	return err
 }
@@ -702,7 +741,6 @@ func postProfile(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-
 	}
 
 	if name := c.FormValue("display_name"); name != "" {
@@ -713,32 +751,6 @@ func postProfile(c echo.Context) error {
 	}
 
 	return c.Redirect(http.StatusSeeOther, "/")
-}
-
-func getIcon(c echo.Context) error {
-	var name string
-	var data []byte
-	err := db.QueryRow("SELECT name, data FROM image WHERE name = ?",
-		c.Param("file_name")).Scan(&name, &data)
-	if err == sql.ErrNoRows {
-		return echo.ErrNotFound
-	}
-	if err != nil {
-		return err
-	}
-
-	mime := ""
-	switch true {
-	case strings.HasSuffix(name, ".jpg"), strings.HasSuffix(name, ".jpeg"):
-		mime = "image/jpeg"
-	case strings.HasSuffix(name, ".png"):
-		mime = "image/png"
-	case strings.HasSuffix(name, ".gif"):
-		mime = "image/gif"
-	default:
-		return echo.ErrNotFound
-	}
-	return c.Blob(http.StatusOK, mime, data)
 }
 
 func tAdd(a, b int64) int64 {
@@ -787,7 +799,7 @@ func main() {
 
 	e.GET("add_channel", getAddChannel)
 	e.POST("add_channel", postAddChannel)
-	e.GET("/icons/:file_name", getIcon)
+	// e.GET("/icons/:file_name", getIcon)
 
 	go func() {
 		log.Println(http.ListenAndServe("localhost:6060", nil))
