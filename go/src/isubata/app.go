@@ -226,7 +226,27 @@ func register(name, password string) (int64, error) {
 	return res.LastInsertId()
 }
 
-// request handlers
+func initializeRedis() {
+	redisConn := redisPool.Get()
+	defer redisConn.Close()
+
+	redisConn.Do("FLUSHALL")
+
+	type InitMsg struct {
+		ChannelID int64 `db:"channel_id"`
+	}
+
+	messages := []InitMsg{}
+	err := db.Select(&messages, "SELECT channel_id FROM message")
+
+	if err != nil {
+		log.Fatalf("Cannot read message from database")
+	}
+
+	for _, msg := range messages {
+		redisConn.Do("INCR", msg.ChannelID)
+	}
+}
 
 func initializeBucket() {
 	log.Println("initializeBucket()")
@@ -274,6 +294,7 @@ func getInitialize(c echo.Context) error {
 	db.MustExec("DELETE FROM haveread")
 	// db.MustExec("DELETE FROM image WHERE id > 1001")
 	initializeBucket()
+	initializeRedis()
 	return c.String(204, "")
 }
 
