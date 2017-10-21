@@ -553,6 +553,9 @@ func fetchUnread(c echo.Context) error {
 			err = db.Get(&cnt,
 				"SELECT COUNT(*) as cnt FROM message WHERE channel_id = ? AND ? < id",
 				chID, lastID)
+			if err != nil {
+				return err
+			}
 		} else {
 			cnt, err = redis.Int64(redisConn.Do("GET", strconv.FormatInt(chID, 10))) // keyがないときはcntは0になる
 			if err == redis.ErrNil {
@@ -566,9 +569,6 @@ func fetchUnread(c echo.Context) error {
 				// fail
 				return err
 			}
-		}
-		if err != nil {
-			return err
 		}
 		r := map[string]interface{}{
 			"channel_id": chID,
