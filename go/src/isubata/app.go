@@ -24,6 +24,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	awsSession "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	redis "github.com/garyburd/redigo/redis"
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
@@ -40,6 +41,7 @@ const (
 )
 
 var (
+	redisPool     *redis.Pool
 	db            *sqlx.DB
 	ErrBadReqeust = echo.NewHTTPError(http.StatusBadRequest)
 	awsConfig     = aws.Config{
@@ -130,6 +132,11 @@ func addMessage(channelID, userID int64, content string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	redisConn := redisPool.Get()
+	defer redisConn.Close()
+	redisConn.Do("INCR", channelID)
+
 	return res.LastInsertId()
 }
 
@@ -768,6 +775,23 @@ func tRange(a, b int64) []int64 {
 func main() {
 	runtime.GOMAXPROCS(8)
 	e := echo.New()
+
+	redisHost := os.Getenv("ISUCON_REDIS_HOST")
+	if redisHost == "" {
+		redisHost = "192.168.101.1"
+	}
+	redisPool = &redis.Pool{
+		MaxIdle:     3,
+		IdleTimeout: 240 * time.Second,
+		Dial: func() (redis.Conn, error) {
+			c, err := redis.Dial("tcp", fmt.Sprintf("%v:6379", redisHost))
+			if err != nil {
+				return nil, err
+			}
+			return c, err
+		},
+	}
+
 	funcs := template.FuncMap{
 		"add":    tAdd,
 		"xrange": tRange,
