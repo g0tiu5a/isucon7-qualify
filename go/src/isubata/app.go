@@ -234,12 +234,11 @@ func initializeRedis() {
 
 	type InitMsg struct {
 		ChannelID int64 `db:"channel_id"`
-		Count     int64
+		Count     int64 `db:"cnt"`
 	}
 
-	udb := db.Unsafe()
 	messages := []InitMsg{}
-	err := udb.Select(&messages, "SELECT channel_id, count(*) FROM message group by channel_id")
+	err := db.Select(&messages, "SELECT channel_id, count(*) as cnt FROM message group by channel_id")
 
 	if err != nil {
 		log.Fatalf("Cannot read message from database")
