@@ -135,7 +135,7 @@ func addMessage(channelID, userID int64, content string) (int64, error) {
 
 	redisConn := redisPool.Get()
 	defer redisConn.Close()
-	redisConn.Do("INCR", channelID)
+	redisConn.Do("INCR", strconv.Itoa(channelID))
 
 	return res.LastInsertId()
 }
@@ -247,7 +247,7 @@ func initializeRedis() {
 	for _, msg := range messages {
 		log.Println(msg.ChannelID)
 		log.Println(msg.Count)
-		redisConn.Do("SET", msg.ChannelID, msg.Count)
+		redisConn.Do("SET", strconv.Itoa(msg.ChannelID), strconv.Itoa(msg.Count))
 	}
 }
 
@@ -554,7 +554,7 @@ func fetchUnread(c echo.Context) error {
 				"SELECT COUNT(*) as cnt FROM message WHERE channel_id = ? AND ? < id",
 				chID, lastID)
 		} else {
-			cnt, err = redis.Int64(redisConn.Do("GET", chID)) // keyがないときはcntは0になる
+			cnt, err = redis.Int64(redisConn.Do("GET", strconv.Itoa(chID))) // keyがないときはcntは0になる
 			if err != redis.ErrNil {
 				return err
 			}
