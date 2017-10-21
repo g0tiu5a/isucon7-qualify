@@ -18,21 +18,33 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo"
-	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
 )
 
 const (
-	avatarMaxBytes = 1 * 1024 * 1024
+	avatarMaxBytes  = 1 * 1024 * 1024
+	endPoint        = "http://192.168.101.2:9000"
+	accessKeyID     = "AJW5XYX03VIE0ITHHN1T"
+	secretAccessKey = "4BN8JIwmFfP33qB7YMFYFu0lspN08iDbiec1txXX"
 )
 
 var (
 	db            *sqlx.DB
 	ErrBadReqeust = echo.NewHTTPError(http.StatusBadRequest)
+	s3Config      = &aws.Config{
+		Credentials:      credentials.NewStaticCredentials(AccessKeyID, SecretAccessKey, ""),
+		Endpoint:         aws.String("http://192.168.101.2:9000"),
+		Region:           aws.String("sakura"),
+		DisableSSL:       aws.Bool(false),
+		S3ForcePathStyle: aws.Bool(true),
+	}
 )
 
 type Renderer struct {
@@ -622,6 +634,16 @@ func postAddChannel(c echo.Context) error {
 		fmt.Sprintf("/channel/%v", lastID))
 }
 
+func postImage(filename string, file *File) error {
+	resp, err := s3Config.PutObject(&s3.PutObjectInput{
+		Bucket: aws.String("image"),
+		Key:    aws.String(filename),
+		Body:   file,
+	})
+	log.Println(resp)
+	return err
+}
+
 func postProfile(c echo.Context) error {
 	self, err := ensureLogin(c)
 	if self == nil {
@@ -630,8 +652,9 @@ func postProfile(c echo.Context) error {
 
 	avatarName := ""
 	var avatarData []byte
+	fh, err := c.FormFile("avatar_icon")
 
-	if fh, err := c.FormFile("avatar_icon"); err == http.ErrMissingFile {
+	if err == http.ErrMissingFile {
 		// no file upload
 	} else if err != nil {
 		return err
@@ -671,6 +694,8 @@ func postProfile(c echo.Context) error {
 		if err != nil {
 			return err
 		}
+
+		postImage(avatarName, fh)
 	}
 
 	if name := c.FormValue("display_name"); name != "" {
