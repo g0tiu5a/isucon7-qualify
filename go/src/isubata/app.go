@@ -651,7 +651,7 @@ func postImage(filename string, file io.ReadSeeker) error {
 		Body:   file,
 	}
 	resp, err := client.PutObject(params)
-	log.Printf("%x\n", err)
+	log.Printf("%s%x\n", resp, err)
 	return err
 }
 
