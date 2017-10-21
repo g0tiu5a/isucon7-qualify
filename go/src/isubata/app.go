@@ -41,12 +41,12 @@ const (
 var (
 	db            *sqlx.DB
 	ErrBadReqeust = echo.NewHTTPError(http.StatusBadRequest)
-	s3Config      = aws.Config{
-		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
+	awsConfig     = aws.Config{
 		Endpoint:         aws.String(endPoint),
 		Region:           aws.String("sakura"),
-		DisableSSL:       aws.Bool(false),
+		DisableSSL:       aws.Bool(true),
 		S3ForcePathStyle: aws.Bool(true),
+		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
 	}
 )
 
@@ -639,13 +639,6 @@ func postAddChannel(c echo.Context) error {
 
 func postImage(filename string, file io.ReadSeeker) error {
 	log.Printf("Called postImage %s\n", filename)
-	awsConfig := aws.Config{
-		Endpoint:         aws.String(endPoint),
-		Region:           aws.String("sakura"),
-		DisableSSL:       aws.Bool(true),
-		S3ForcePathStyle: aws.Bool(true),
-		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
-	}
 	s3Session := awsSession.New(&awsConfig)
 	client := s3.New(s3Session)
 	params := &s3.PutObjectInput{
@@ -700,10 +693,6 @@ func postProfile(c echo.Context) error {
 	}
 
 	if avatarName != "" && len(avatarData) > 0 {
-		_, err := db.Exec("INSERT INTO image (name, data) VALUES (?, ?)", avatarName, avatarData)
-		if err != nil {
-			return err
-		}
 		_, err = db.Exec("UPDATE user SET avatar_icon = ? WHERE id = ?", avatarName, self.ID)
 		if err != nil {
 			return err
