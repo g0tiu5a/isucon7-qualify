@@ -640,8 +640,11 @@ func postAddChannel(c echo.Context) error {
 func postImage(filename string, file io.ReadSeeker) error {
 	log.Printf("Called postImage %s\n", filename)
 	awsConfig := aws.Config{
-		Credentials: credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
-		Region:      aws.String("sakura"),
+		Endpoint:         aws.String(endPoint),
+		Region:           aws.String("sakura"),
+		DisableSSL:       aws.Bool(true),
+		S3ForcePathStyle: aws.Bool(true),
+		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
 	}
 	s3Session := awsSession.New(&awsConfig)
 	client := s3.New(s3Session)
