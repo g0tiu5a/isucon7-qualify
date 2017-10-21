@@ -424,7 +424,7 @@ func queryHaveReadAllChannels(userID int64) (map[int64]int64, error) {
 	havereads := []HaveRearParU{}
 	err := db.Select(&havereads, "SELECT channel_id, message_id FROM haveread WHERE user_id = ?")
 
-	var resp map[int64]int64
+	resp := map[int64]int64{}
 
 	for _, h := range havereads {
 		resp[h.ChannelID] = h.MessageID
@@ -448,9 +448,9 @@ func fetchUnread(c echo.Context) error {
 
 	resp := []map[string]interface{}{}
 
-	havereads, err := queryHaveReadAllChannels(userID)
-	if err != nil {
-		return err
+	havereads, err2 := queryHaveReadAllChannels(userID)
+	if err2 != nil {
+		return err2
 	}
 
 	for _, chID := range channels {
