@@ -811,7 +811,7 @@ func main() {
 
 	redisHost := os.Getenv("ISUCON_REDIS_HOST")
 	if redisHost == "" {
-		redisHost = "192.168.101.2"
+		redisHost = "192.168.101.3"
 	}
 	redisPool = &redis.Pool{
 		MaxIdle:     3,
