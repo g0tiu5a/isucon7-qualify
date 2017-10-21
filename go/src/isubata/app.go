@@ -244,7 +244,7 @@ func initializeRedis() {
 	}
 
 	for _, msg := range messages {
-		log.Println("msg:" + msg.ChannelID)
+		log.Println(msg.ChannelID)
 		redisConn.Do("INCR", msg.ChannelID)
 	}
 }
