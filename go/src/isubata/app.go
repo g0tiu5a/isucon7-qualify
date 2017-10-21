@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
+	"mime/multipart"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -20,11 +21,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	awsSession "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
 )
 
@@ -38,9 +41,9 @@ const (
 var (
 	db            *sqlx.DB
 	ErrBadReqeust = echo.NewHTTPError(http.StatusBadRequest)
-	s3Config      = &aws.Config{
-		Credentials:      credentials.NewStaticCredentials(AccessKeyID, SecretAccessKey, ""),
-		Endpoint:         aws.String("http://192.168.101.2:9000"),
+	s3Config      = aws.Config{
+		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
+		Endpoint:         aws.String(endPoint),
 		Region:           aws.String("sakura"),
 		DisableSSL:       aws.Bool(false),
 		S3ForcePathStyle: aws.Bool(true),
@@ -634,12 +637,19 @@ func postAddChannel(c echo.Context) error {
 		fmt.Sprintf("/channel/%v", lastID))
 }
 
-func postImage(filename string, file *File) error {
-	resp, err := s3Config.PutObject(&s3.PutObjectInput{
+func postImage(filename string, file io.ReadSeeker) error {
+	awsConfig := aws.Config{
+		Credentials: credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
+		Region:      aws.String("sakura"),
+	}
+	s3Session := awsSession.New(&awsConfig)
+	client := s3.New(s3Session)
+	params := &s3.PutObjectInput{
 		Bucket: aws.String("image"),
 		Key:    aws.String(filename),
 		Body:   file,
-	})
+	}
+	resp, err := client.PutObject(params)
 	log.Println(resp)
 	return err
 }
@@ -653,7 +663,7 @@ func postProfile(c echo.Context) error {
 	avatarName := ""
 	var avatarData []byte
 	fh, err := c.FormFile("avatar_icon")
-
+	var file multipart.File
 	if err == http.ErrMissingFile {
 		// no file upload
 	} else if err != nil {
@@ -671,7 +681,7 @@ func postProfile(c echo.Context) error {
 			return ErrBadReqeust
 		}
 
-		file, err := fh.Open()
+		file, err = fh.Open()
 		if err != nil {
 			return err
 		}
@@ -695,7 +705,7 @@ func postProfile(c echo.Context) error {
 			return err
 		}
 
-		postImage(avatarName, fh)
+		postImage(avatarName, file)
 	}
 
 	if name := c.FormValue("display_name"); name != "" {
