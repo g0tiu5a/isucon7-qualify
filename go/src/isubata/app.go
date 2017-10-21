@@ -416,25 +416,21 @@ func queryChannels() ([]int64, error) {
 	return res, err
 }
 
-func queryHaveRead(userID, chID int64) (int64, error) {
-	type HaveRead struct {
-		UserID    int64     `db:"user_id"`
-		ChannelID int64     `db:"channel_id"`
-		MessageID int64     `db:"message_id"`
-		UpdatedAt time.Time `db:"updated_at"`
-		CreatedAt time.Time `db:"created_at"`
+func queryHaveReadAllChannels(userID int64) (map[int64]int64, error) {
+	type HaveRearParU struct {
+		ChannelID int64 `db:"channel_id"`
+		MessageID int64 `db:"message_id"`
 	}
-	h := HaveRead{}
+	havereads := []HaveRearParU{}
+	err := db.Select(&havereads, "SELECT message_id FROM haveread WHERE user_id = ?")
 
-	err := db.Get(&h, "SELECT * FROM haveread WHERE user_id = ? AND channel_id = ?",
-		userID, chID)
+	var resp map[int64]int64
 
-	if err == sql.ErrNoRows {
-		return 0, nil
-	} else if err != nil {
-		return 0, err
+	for _, h := range havereads {
+		resp[h.ChannelID] = h.MessageID
 	}
-	return h.MessageID, nil
+
+	return resp, err
 }
 
 func fetchUnread(c echo.Context) error {
@@ -452,11 +448,13 @@ func fetchUnread(c echo.Context) error {
 
 	resp := []map[string]interface{}{}
 
+	havereads, err := queryHaveReadAllChannels(userID)
+	if err != nil {
+		return err
+	}
+
 	for _, chID := range channels {
-		lastID, err := queryHaveRead(userID, chID)
-		if err != nil {
-			return err
-		}
+		lastID, _ := havereads[chID] // err = falseでもlastIDが0になるので捨てられる
 
 		var cnt int64
 		if lastID > 0 {
