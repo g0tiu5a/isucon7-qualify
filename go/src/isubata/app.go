@@ -559,10 +559,8 @@ func fetchUnread(c echo.Context) error {
 		} else {
 			cnt, err = redis.Int64(redisConn.Do("GET", strconv.FormatInt(chID, 10))) // keyがないときはcntは0になる
 			if err == redis.ErrNil {
-				log.Printf("err == redis.ErrNil: %v\n", cnt)
 				// ignore
 			} else if err == nil {
-				log.Printf("err == nil: %v\n", cnt)
 				// ignore
 			} else {
 				log.Printf("something wrong: %v\n", cnt)
