@@ -234,10 +234,11 @@ func initializeRedis() {
 
 	type InitMsg struct {
 		ChannelID int64 `db:"channel_id"`
+		Count     int64
 	}
 
 	messages := []InitMsg{}
-	err := db.Select(&messages, "SELECT channel_id FROM message")
+	err := db.Select(&messages, "SELECT channel_id, count(*) FROM message group by channel_id")
 
 	if err != nil {
 		log.Fatalf("Cannot read message from database")
@@ -245,7 +246,8 @@ func initializeRedis() {
 
 	for _, msg := range messages {
 		log.Println(msg.ChannelID)
-		redisConn.Do("INCR", msg.ChannelID)
+		log.Println(msg.Count)
+		redisConn.Do("SET", msg.ChannelID, msg.Count)
 	}
 }
 
