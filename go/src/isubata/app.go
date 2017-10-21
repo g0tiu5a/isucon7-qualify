@@ -539,6 +539,9 @@ func fetchUnread(c echo.Context) error {
 		return err2
 	}
 
+	redisConn := redisPool.Get()
+	defer redisConn.Close()
+
 	for _, chID := range channels {
 		lastID, _ := havereads[chID] // err = falseでもlastIDが0になるので捨てられる
 
@@ -548,9 +551,10 @@ func fetchUnread(c echo.Context) error {
 				"SELECT COUNT(*) as cnt FROM message WHERE channel_id = ? AND ? < id",
 				chID, lastID)
 		} else {
-			err = db.Get(&cnt,
-				"SELECT COUNT(*) as cnt FROM message WHERE channel_id = ?",
-				chID)
+			cnt, err = redis.Int64(redisConn.Do("GET", chID)) // keyがないときはcntは0になる
+			if err != redis.ErrNil {
+				return err
+			}
 		}
 		if err != nil {
 			return err
