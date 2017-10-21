@@ -13,7 +13,6 @@ import (
 	"math/rand"
 	"mime/multipart"
 	"net/http"
-	_ "net/http/pprof"
 	"os"
 	"runtime"
 	"strconv"
@@ -859,10 +858,6 @@ func main() {
 	e.GET("add_channel", getAddChannel)
 	e.POST("add_channel", postAddChannel)
 	// e.GET("/icons/:file_name", getIcon)
-
-	go func() {
-		log.Println(http.ListenAndServe("localhost:6060", nil))
-	}()
 
 	e.Start(":5000")
 }
