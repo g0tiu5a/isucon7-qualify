@@ -13,6 +13,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -654,14 +655,17 @@ func postProfile(c echo.Context) error {
 			return ErrBadReqeust
 		}
 
+		// ファイルに書き出す
+		err := ioutil.Writefile(filepath.Join("../", "public", "icons", avatarName), avatarData, 0666)
+		if err != nil {
+			return ErrBadReqeust
+		}
+
 		avatarName = fmt.Sprintf("%x%s", sha1.Sum(avatarData), ext)
 	}
 
 	if avatarName != "" && len(avatarData) > 0 {
-		_, err := db.Exec("INSERT INTO image (name, data) VALUES (?, ?)", avatarName, avatarData)
-		if err != nil {
-			return err
-		}
+		// アイコン名を上書き
 		_, err = db.Exec("UPDATE user SET avatar_icon = ? WHERE id = ?", avatarName, self.ID)
 		if err != nil {
 			return err
