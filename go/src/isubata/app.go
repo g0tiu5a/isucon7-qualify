@@ -115,7 +115,7 @@ func addMessage(channelID, userID int64, content string) (int64, error) {
 	// メッセージカウントの値を加算する
 	_, err = db.Exec("UPDATE channel SET message_count=message_count+1 WHERE id = ?", channelID)
 	if err != nil {
-		return res.LastInsertId(), err
+		return 0, err
 	}
 
 	return res.LastInsertId()
