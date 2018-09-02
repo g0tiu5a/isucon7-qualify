@@ -575,7 +575,7 @@ func getHistory(c echo.Context) error {
 	}
 
 	mjson := make([]map[string]interface{}, 0)
-	for i := 0; i < len(messages); i++ {
+	for i := len(messages) - 1; i >= 0; i-- {
 		r := make(map[string]interface{})
 
 		u := User{
