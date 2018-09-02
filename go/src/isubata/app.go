@@ -658,6 +658,7 @@ func postProfile(c echo.Context) error {
 		// ファイルに書き出す
 		err = ioutil.WriteFile(filepath.Join("../", "public", "icons", avatarName), avatarData, 0666)
 		if err != nil {
+			log.Println(errors.WithStackTrace(err))
 			return ErrBadReqeust
 		}
 
