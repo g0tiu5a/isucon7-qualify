@@ -5,7 +5,6 @@ import (
 	"crypto/sha1"
 	"database/sql"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -659,7 +658,7 @@ func postProfile(c echo.Context) error {
 		// ファイルに書き出す
 		err = ioutil.WriteFile(filepath.Join("../", "public", "icons", avatarName), avatarData, 0666)
 		if err != nil {
-			log.Println(errors.WithStackTrace(err))
+			log.Printf("Cannot upload file %s\n", avatarName)
 			return ErrBadReqeust
 		}
 
