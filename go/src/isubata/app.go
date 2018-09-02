@@ -229,11 +229,12 @@ func getIndex(c echo.Context) error {
 }
 
 type ChannelInfo struct {
-	ID          int64     `db:"id"`
-	Name        string    `db:"name"`
-	Description string    `db:"description"`
-	UpdatedAt   time.Time `db:"updated_at"`
-	CreatedAt   time.Time `db:"created_at"`
+	ID           int64     `db:"id"`
+	Name         string    `db:"name"`
+	MessageCount int64     `db:"message_count"`
+	Description  string    `db:"description"`
+	UpdatedAt    time.Time `db:"updated_at"`
+	CreatedAt    time.Time `db:"created_at"`
 }
 
 func getChannel(c echo.Context) error {
