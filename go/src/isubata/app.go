@@ -49,7 +49,7 @@ func init() {
 
 	db_host := os.Getenv("ISUBATA_DB_HOST")
 	if db_host == "" {
-		db_host = "127.0.0.1"
+		db_host = "192.168.0.30"
 	}
 	db_port := os.Getenv("ISUBATA_DB_PORT")
 	if db_port == "" {
@@ -57,11 +57,11 @@ func init() {
 	}
 	db_user := os.Getenv("ISUBATA_DB_USER")
 	if db_user == "" {
-		db_user = "root"
+		db_user = "isucon"
 	}
 	db_password := os.Getenv("ISUBATA_DB_PASSWORD")
 	if db_password != "" {
-		db_password = ":" + db_password
+		db_password = ":isucon"
 	}
 
 	dsn := fmt.Sprintf("%s%s@tcp(%s:%s)/isubata?parseTime=true&loc=Local&charset=utf8mb4",
