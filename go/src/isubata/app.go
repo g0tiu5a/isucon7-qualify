@@ -656,7 +656,7 @@ func postProfile(c echo.Context) error {
 		}
 
 		// ファイルに書き出す
-		err = ioutil.Writefile(filepath.Join("../", "public", "icons", avatarName), avatarData, 0666)
+		err = ioutil.WriteFile(filepath.Join("../", "public", "icons", avatarName), avatarData, 0666)
 		if err != nil {
 			return ErrBadReqeust
 		}
