@@ -414,7 +414,7 @@ func getMessage(c echo.Context) error {
 	}
 
 	messages := []MessageWithUser{}
-	err = db.Select(&messages, "SELECT m.id, m.content, m.created_at, u.name, u.avatar_icon, u.created_at FROM message m INNER JOIN user u ON m.user_id = u.id WHERE m.id > ? AND m.channel_id = ? ORDER BY m.id DESC LIMIT 100;", lastID, chanID)
+	err = db.Select(&messages, "SELECT m.id, m.content, m.created_at, u.name, u.display_name, u.avatar_icon FROM message m INNER JOIN user u ON m.user_id = u.id WHERE m.id > ? AND m.channel_id = ? ORDER BY m.id DESC LIMIT 100;", lastID, chanID)
 	if err != nil {
 		return err
 	}
