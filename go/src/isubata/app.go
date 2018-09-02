@@ -207,7 +207,30 @@ func getInitialize(c echo.Context) error {
 	db.MustExec("DELETE FROM channel WHERE id > 10")
 	db.MustExec("DELETE FROM message WHERE id > 10000")
 	db.MustExec("DELETE FROM haveread")
+	initializeMessageCount()
 	return c.String(204, "")
+}
+
+func initializeMessageCount() {
+	type ChannelCount struct {
+		ChannelID int64 `db:"channel_id"`
+		Count     int64 `db:"cnt"`
+	}
+
+	channelCounts := []ChannelCount{}
+	err := db.Select(&channelCounts, "SELECT channel_id, COUNT(*) as cnt FROM message GROUP BY channel_id")
+	if err != nil {
+		log.Printf("Error while collecting counts each channels")
+		return
+	}
+
+	for _, c := range channelCounts {
+		_, err = db.Exec("UPDATE channel SET message_count = ? WHERE id = ?", c.Count, c.ChannelID)
+		if err != nil {
+			log.Printf(fmt.Sprintf("initializeMessageCount(): cannot update count: channel_id = %s", c.ChannelID))
+			return
+		}
+	}
 }
 
 func getIndex(c echo.Context) error {
@@ -479,7 +502,7 @@ func fetchUnread(c echo.Context) error {
 				chID, lastID)
 		} else {
 			err = db.Get(&cnt,
-				"SELECT COUNT(*) as cnt FROM message WHERE channel_id = ?",
+				"SELECT message_count as cnt FROM channel WHERE id = ?",
 				chID)
 		}
 		if err != nil {
