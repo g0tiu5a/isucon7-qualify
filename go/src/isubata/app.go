@@ -494,7 +494,7 @@ func fetchUnread(c echo.Context) error {
 				chID, lastID)
 		} else {
 			err = db.Get(&cnt,
-				"SELECT COUNT(*) as cnt FROM message WHERE channel_id = ?",
+				"SELECT message_count as cnt FROM channel WHERE id = ?",
 				chID)
 		}
 		if err != nil {
