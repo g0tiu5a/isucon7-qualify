@@ -111,6 +111,13 @@ func addMessage(channelID, userID int64, content string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	// メッセージカウントの値を加算する
+	_, err = db.Exec("UPDATE channel SET message_count=message_count+1 WHERE id = ?", channelID)
+	if err != nil {
+		return res.LastInsertId(), err
+	}
+
 	return res.LastInsertId()
 }
 
@@ -502,7 +509,8 @@ func getHistory(c echo.Context) error {
 
 	const N = 20
 	var cnt int64
-	err = db.Get(&cnt, "SELECT COUNT(*) as cnt FROM message WHERE channel_id = ?", chID)
+	// ALTER TABLE channel ADD COLUMN message_count bigint(20), DEFAULT 0;
+	err = db.Get(&cnt, "SELECT message_count as cnt FROM channel WHERE id = ?", chID)
 	if err != nil {
 		return err
 	}
