@@ -15,6 +15,7 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -696,6 +697,7 @@ func tRange(a, b int64) []int64 {
 }
 
 func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	go func() {
 		log.Println(http.ListenAndServe("localhost:6060", nil))
 	}()
