@@ -655,14 +655,13 @@ func postProfile(c echo.Context) error {
 			return ErrBadReqeust
 		}
 
+		avatarName = fmt.Sprintf("%x%s", sha1.Sum(avatarData), ext)
 		// ファイルに書き出す
 		err = ioutil.WriteFile(filepath.Join("../", "public", "icons", avatarName), avatarData, 0666)
 		if err != nil {
-			log.Printf("Cannot upload file %s\n", avatarName)
+			log.Printf(fmt.Sprintf("Cannot upload file %s\n", avatarName))
 			return ErrBadReqeust
 		}
-
-		avatarName = fmt.Sprintf("%x%s", sha1.Sum(avatarData), ext)
 	}
 
 	if avatarName != "" && len(avatarData) > 0 {
